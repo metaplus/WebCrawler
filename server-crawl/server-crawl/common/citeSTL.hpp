@@ -67,6 +67,7 @@ using std::make_unique;		// unsuppoted by old version compiler
 
 using std::cout;
 using std::cin;
+using std::cerr;
 
 enum symbol:char{
     el='\n',et='\t',er='\r',sp=' ',dot=','

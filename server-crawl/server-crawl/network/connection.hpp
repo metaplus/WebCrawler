@@ -6,12 +6,12 @@ const boost::filesystem::path root="/home/kse/Videos";
 
 namespace net{
 
-    class Connection{ //: public enable_shared_from_this<Connection>{
+    class connection{ //: public enable_shared_from_this<connection>{
     private:
-        class Handler{
+        class protocal{
         public:
-            Handler(asio::io_service& _srv):socket(_srv){ }
-            void process(boost::barrier& barrier,unique_future<vector<char>>& chunk){
+            explicit protocal(asio::io_service& _srv):socket(_srv){ }
+            void handle(boost::barrier& barrier,unique_future<vector<char>>& chunk){
                 //   auto self(shared_from_this());
 
                 asio::async_read_until(socket,buffer,"\r\n\r\n",[this,&chunk,&barrier](const error&,size_t){
@@ -40,7 +40,7 @@ namespace net{
                 });
             }
         private:
-            friend class Connection;
+            friend class connection;
             tcp::socket socket;
             asio::streambuf buffer;
             string method,url,version;
@@ -48,27 +48,27 @@ namespace net{
         };
 
     public:
-        Connection(short _port,boost::thread_group& _sender)
+        connection(short _port,boost::thread_group& _sender)
                 :service(),work(service),
                  acceptor(service,tcp::endpoint(tcp::v4(),_port),true) {
             acceptor.listen();
             _sender.create_thread(boost::bind(&asio::io_service::run,&service));
         }
         void run(boost::barrier& barrier){
-            auto current=make_shared<Handler>(service);
+            auto current=make_shared<protocal>(service);
             acceptor.async_accept(current->socket,[&barrier,this,current](const error& error){
                 if(!error){
                     sequence.push_back(current);
-                    current->process(barrier,chunk);
+                    current->handle(barrier,chunk);
                 }
                 run(barrier);
             });
         }
-        Connection& source(shared_ptr<promise<vector<char>>> from){
+        connection& source(shared_ptr<promise<vector<char>>> from){
             chunk=from->get_future();
             return *this;
         }
-        ~Connection(){
+        ~connection(){
             service.stop();
         }
 
@@ -77,7 +77,7 @@ namespace net{
         asio::io_service service;
         asio::io_service::work work;
         tcp::acceptor acceptor;
-        vector<shared_ptr<Handler>> sequence;
+        vector<shared_ptr<protocal>> sequence;
         unique_future<vector<char>> chunk;
     };
 

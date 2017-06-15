@@ -11,8 +11,6 @@
 #include <boost/unordered_map.hpp>
 #include <boost/thread/future.hpp>
 
-using namespace boost::filesystem;
-using namespace boost::asio::ip;
 
 namespace asio=boost::asio;
 namespace file=boost::filesystem;
@@ -25,5 +23,8 @@ using boost::thread;
 using boost::unique_future;
 using boost::regex;
 using boost::promise;
+using boost::asio::ip::address;
+using boost::asio::ip::tcp;
+
 
 using error = boost::system::error_code;
