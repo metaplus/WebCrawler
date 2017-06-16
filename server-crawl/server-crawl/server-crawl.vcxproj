@@ -146,6 +146,7 @@
   <ItemGroup>
     <ClInclude Include="common\citeBoost.hpp" />
     <ClInclude Include="common\citeSTL.hpp" />
+    <ClInclude Include="network\config.hpp" />
     <ClInclude Include="network\connection.hpp" />
     <ClInclude Include="network\server.hpp" />
     <ClInclude Include="resource.h" />

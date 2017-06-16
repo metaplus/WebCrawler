@@ -70,7 +70,7 @@ using std::cin;
 using std::cerr;
 
 enum symbol:char{
-    el='\n',et='\t',er='\r',sp=' ',dot=','
+    en='\n',et='\t',er='\r',sp=' ',dt=','
 };
 
 inline
@@ -85,11 +85,11 @@ ostream& crlf(ostream& os){
 
 template <typename T,typename Di=typename conditional<numeric_limits<T>().is_integer,
         uniform_int_distribution<>,uniform_real_distribution<>>::type>
-class Random{
+class randomizer{
 public:
     using value_type =T;
     using distribution_type=Di;
-    Random(value_type low,value_type high){
+    randomizer(value_type low,value_type high){
         rd=bind(distribution_type{low,high},default_random_engine{});
     }
     value_type operator()(){
@@ -104,19 +104,9 @@ ostream& operator<<(ostream& os,const symbol e){
     return os<<char{e};
 }
 
-
-template <typename T> 
-ostream& operator<<(ostream& os,const valarray<T>& va){
-    auto last=va.size();
-    for(const auto iter:va){
-        os<<iter;
-        if(--last>0) os<<' ';
-    }
-    return os;
-}
 template<typename T,typename U>
 ostream& operator<<(ostream& os,pair<T,U> pr){
-    return os<<pr.first<<' '<<pr.second<<el;
+    return os<<pr.first<<' '<<pr.second<<en;
 }
 template <typename T>
 ostream& operator<<(ostream& os,vector<T> vec){

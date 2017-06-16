@@ -1,8 +1,7 @@
 #pragma once
 #include "common/citeSTL.hpp"
 #include "common/citeBoost.hpp"
-
-const boost::filesystem::path root="/home/kse/Videos";
+#include "config.hpp"
 
 namespace net{
 
@@ -10,11 +9,11 @@ namespace net{
     private:
         class protocal{
         public:
-            explicit protocal(asio::io_service& _srv):socket(_srv){ }
-            void handle(boost::barrier& barrier,unique_future<vector<char>>& chunk){
+            explicit protocal(io_service& _srv):socket(_srv){ }
+            void handle(barrier& bar,unique_future<vector<char>>& chunk){
                 //   auto self(shared_from_this());
 
-                asio::async_read_until(socket,buffer,"\r\n\r\n",[this,&chunk,&barrier](const error&,size_t){
+                async_read_until(socket,buffer,"\r\n\r\n",[&,this](const error&,size_t){
                     istream in(&buffer);
                     in>>method>>url>>version;
                     string identifier,value;
@@ -22,17 +21,17 @@ namespace net{
                         request[identifier]=value;
                     }
 
-                    vector<char> ts=chunk.get();
+                    auto ts=chunk.get();
                     stringstream response;
-                    response<<"HTTP/1.1 200 OK\r\n"
-                            <<"Content-Length: "<<ts.size()<<"\r\n"
-                            <<"Content-Type: video/mp2t\r\n\r\n";
+                    response	<<"HTTP/1.1 200 OK\r\n"
+                					<<"Content-Length: "<<ts.size()<<"\r\n"
+									<<"Content-Type: video/mp2t\r\n\r\n";
 
                     if(url=="/"){
-                        barrier.wait();
+                        bar.wait();
                         asio::write(socket,asio::buffer(response.str()));
                         asio::write(socket,asio::buffer(ts));
-                        cout<<this_thread::get_id()<<et<<"finish"<<el;
+                        cout<<this_thread::get_id()<<et<<"finish"<<en;
                     }else{
                         string name;
                     }
@@ -54,9 +53,9 @@ namespace net{
             acceptor.listen();
             _sender.create_thread(boost::bind(&asio::io_service::run,&service));
         }
-        void run(boost::barrier& barrier){
+        void run(barrier& barrier){
             auto current=make_shared<protocal>(service);
-            acceptor.async_accept(current->socket,[&barrier,this,current](const error& error){
+            acceptor.async_accept(current->socket,[&,this,current](const error& error){
                 if(!error){
                     sequence.push_back(current);
                     current->handle(barrier,chunk);
@@ -73,9 +72,9 @@ namespace net{
         }
 
     private:
-        friend class Server;
-        asio::io_service service;
-        asio::io_service::work work;
+        friend class server;
+        io_service service;
+        io_service::work work;
         tcp::acceptor acceptor;
         vector<shared_ptr<protocal>> sequence;
         unique_future<vector<char>> chunk;
