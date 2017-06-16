@@ -33,13 +33,16 @@
     <ClInclude Include="common\citeSTL.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="network\connection.hpp">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="network\server.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="network\config.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="network\session.hpp">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="common\utility\pool.hpp">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

@@ -19,7 +19,9 @@ namespace lockfree = boost::lockfree;
 
 using boost::barrier;
 using boost::thread;
+using boost::thread_group;
 using boost::unique_future;
+using boost::shared_future;
 using boost::regex;
 using boost::promise;
 using boost::lockfree::spsc_queue;

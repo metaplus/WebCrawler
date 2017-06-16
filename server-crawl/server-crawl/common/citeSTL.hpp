@@ -12,7 +12,6 @@
 #include <vector>
 #include <set>
 #include <fstream>
-#include <cmath>
 #include <functional>
 #include <chrono>
 #include <sstream>
@@ -21,12 +20,10 @@
 #include <memory>
 #include <future>
 #include <random>
-#include <regex>
 #include <queue>
 #include <iterator>
 #include <atomic>
 #include <ratio>
-#include <streambuf>
 
 namespace chrono = std::chrono;
 namespace place = std::placeholders;
@@ -43,7 +40,6 @@ using std::istream_iterator;
 using std::ostream_iterator;
 using std::istreambuf_iterator;
 using std::ostreambuf_iterator;
-using std::conditional;
 using std::uniform_int_distribution;
 using std::uniform_real_distribution;
 using std::ratio;
@@ -56,6 +52,17 @@ using std::shared_ptr;
 using std::unique_ptr;
 using std::stringstream;
 using std::default_random_engine;
+using std::enable_if;
+using std::enable_if_t;
+using std::conditional;
+using std::is_same;
+using std::is_base_of;
+using std::is_function;
+
+using std::ref;
+using std::move;
+using std::forward;
+using std::copy;
 
 using std::accumulate;
 using std::transform;

@@ -5,7 +5,7 @@
 
 namespace net{
 
-    class connection{ //: public enable_shared_from_this<connection>{
+    class session{ //: public enable_shared_from_this<session>{
     private:
         class protocal{
         public:
@@ -39,7 +39,7 @@ namespace net{
                 });
             }
         private:
-            friend class connection;
+            friend class session;
             tcp::socket socket;
             asio::streambuf buffer;
             string method,url,version;
@@ -47,10 +47,11 @@ namespace net{
         };
 
     public:
-        connection(short _port,boost::thread_group& _sender)
+        session(short _port,boost::thread_group& _sender)
                 :service(),work(service),
                  acceptor(service,tcp::endpoint(tcp::v4(),_port),true) {
             acceptor.listen();
+			//acceptor.set_option(asio::socket_base::reuse_address(true));
             _sender.create_thread(boost::bind(&asio::io_service::run,&service));
         }
         void run(barrier& barrier){
@@ -63,11 +64,11 @@ namespace net{
                 run(barrier);
             });
         }
-        connection& source(shared_ptr<promise<vector<char>>> from){
+        session& source(shared_ptr<promise<vector<char>>> from){
             chunk=from->get_future();
             return *this;
         }
-        ~connection(){
+        ~session(){
             service.stop();
         }
 
