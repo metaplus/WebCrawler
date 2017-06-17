@@ -4,12 +4,14 @@
 
 namespace net{
 
+
+
     class server{
     public:
         server(boost::thread_group& _sender,int _amount,short _port=8080)
                 :amount(_amount),port(_port),sender(_sender){
             for(int i=0;i<amount;i++){
-                session.push_back(make_shared<session>(port+i,sender));
+              //  session.push_back(make_shared<session>(port+i,sender));
             }
         }
 

@@ -24,8 +24,8 @@
 #include <atomic>
 #include <ratio>
 
-namespace chrono = std::chrono;
-namespace place = std::placeholders;
+//namespace chrono = std::chrono;
+//namespace place = std::placeholders;
 
 using std::string;
 using std::vector;
@@ -69,7 +69,10 @@ using std::forward;
 using std::copy;
 using std::accumulate;
 using std::transform;
-using std::bind;
+//using std::bind;
+//using std::thread;
+//using std::future;
+//using std::promise;
 using std::getline;
 using std::ws;
 using std::make_shared;

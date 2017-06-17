@@ -148,6 +148,7 @@
     <ClInclude Include="common\citeBoost.hpp" />
     <ClInclude Include="common\citeSTL.hpp" />
     <ClInclude Include="common\utility\pool.hpp" />
+    <ClInclude Include="network\client.hpp" />
     <ClInclude Include="network\config.hpp" />
     <ClInclude Include="network\session.hpp" />
     <ClInclude Include="network\server.hpp" />

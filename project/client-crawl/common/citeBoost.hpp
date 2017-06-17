@@ -11,12 +11,14 @@
 #include <boost/unordered_map.hpp>
 #include <boost/thread/future.hpp>
 #include <boost/assert.hpp>
+#include <boost/regex.hpp>
 
 namespace asio=boost::asio;
 namespace file=boost::filesystem;
 namespace this_thread = boost::this_thread;
 namespace lockfree = boost::lockfree;
-namespace placeholders = boost::asio::placeholders;
+namespace place = boost::asio::placeholders;
+namespace chrono = boost::chrono;
 
 using boost::barrier;
 using boost::thread;
@@ -24,6 +26,8 @@ using boost::thread_group;
 using boost::unique_future;
 using boost::shared_future;
 using boost::regex;
+using boost::smatch;
+using boost::cmatch;
 using boost::promise;
 using boost::lockfree::spsc_queue;
 using boost::lockfree::capacity;
@@ -34,6 +38,7 @@ using boost::asio::io_service;
 using boost::asio::streambuf;
 using boost::noncopyable;
 
+using boost::bind;
 using boost::asio::async_read_until;
 using boost::asio::async_read;
 using boost::asio::async_write;
@@ -41,4 +46,8 @@ using boost::asio::async_connect;
 using boost::asio::read;
 using boost::asio::write;
 using boost::asio::connect;
+
+using boost::regex_match;
+using boost::regex_search;
+
 using error = boost::system::error_code;
