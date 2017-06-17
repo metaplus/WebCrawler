@@ -3,13 +3,15 @@
 #include "common/citeBoost.hpp"
 #include "config.hpp"
 
+using protocal = boost::asio::ip::tcp;
+using resolver = protocal::resolver;
+
 namespace net{
 
     class session{ //: public enable_shared_from_this<session>{
-    private:
-        class protocal{
+        class handler{
         public:
-            explicit protocal(io_service& _srv):socket(_srv){ }
+            explicit handler(io_service& _srv):socket(_srv){ }
             void handle(barrier& bar,unique_future<vector<char>>& chunk){
                 //   auto self(shared_from_this());
 
@@ -55,7 +57,7 @@ namespace net{
             _sender.create_thread(boost::bind(&asio::io_service::run,&service));
         }
         void run(barrier& barrier){
-            auto current=make_shared<protocal>(service);
+            auto current=make_shared<handler>(service);
             acceptor.async_accept(current->socket,[&,this,current](const error& error){
                 if(!error){
                     sequence.push_back(current);
@@ -77,7 +79,7 @@ namespace net{
         io_service service;
         io_service::work work;
         tcp::acceptor acceptor;
-        vector<shared_ptr<protocal>> sequence;
+        vector<shared_ptr<handler>> sequence;
         unique_future<vector<char>> chunk;
     };
 

@@ -6,7 +6,6 @@
 #include <utility>
 #include <valarray>
 #include <string>
-#include <cassert>
 #include <map>
 #include <unordered_map>
 #include <vector>
@@ -50,6 +49,7 @@ using std::pair;
 using std::tuple;
 using std::shared_ptr;
 using std::unique_ptr;
+using std::enable_shared_from_this;
 using std::stringstream;
 using std::default_random_engine;
 using std::enable_if;
@@ -58,19 +58,24 @@ using std::conditional;
 using std::is_same;
 using std::is_base_of;
 using std::is_function;
+using std::once_flag;
 
+using std::max;
+using std::min;
+using std::advance;
 using std::ref;
 using std::move;
 using std::forward;
 using std::copy;
-
 using std::accumulate;
 using std::transform;
 using std::bind;
 using std::getline;
 using std::ws;
 using std::make_shared;
-using std::make_unique;		// unsuppoted by old version compiler
+using std::make_unique;		// required compiler enable c++ 14 features
+using std::call_once;
+using std::boolalpha;
 
 using std::cout;
 using std::cin;

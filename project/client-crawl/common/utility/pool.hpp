@@ -6,7 +6,7 @@
 // memory pool might be specified in the future
 
 template<typename T,typename = enable_if_t<is_same<T,thread>::value>>
-class pool{
+class pool:noncopyable{
 public:
 	explicit pool(short thread_count)
 		:count{thread_count},service{},work{make_unique<io_service::work>(ref(service))}
@@ -25,14 +25,23 @@ public:
 	{
 		service.post(task);
 	}
+
+	void wait()
+	{
+		call_once(token,[this]
+		{
+			work.reset();
+			worker.join_all();
+		});
+	}
 	~pool()
 	{
-		work.reset();
-		worker.join_all();
+		wait();
 		service.stop();
 	}
 private:
 	short count;
+	once_flag token;
 	io_service service;
 	unique_ptr<io_service::work> work;
 	thread_group worker;
