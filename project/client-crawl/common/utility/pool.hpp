@@ -20,14 +20,15 @@ public:
 	{
 		return service;
 	}
-	template<typename U> typename
-	enable_if<is_function<U>::value>::type post(U task)
+	template<typename U> 
+	enable_if_t<is_function<U>::value> post(U task)
 	{
 		service.post(task);
 	}
 
-	void wait()
+	void finish()
 	{
+		static thread_local once_flag token;
 		call_once(token,[this]
 		{
 			work.reset();
@@ -36,12 +37,11 @@ public:
 	}
 	~pool()
 	{
-		wait();
+		finish();
 		service.stop();
 	}
 private:
 	short count;
-	once_flag token;
 	io_service service;
 	unique_ptr<io_service::work> work;
 	thread_group worker;

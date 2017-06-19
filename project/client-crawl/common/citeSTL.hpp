@@ -23,6 +23,7 @@
 #include <iterator>
 #include <atomic>
 #include <ratio>
+#include <exception>
 
 //namespace chrono = std::chrono;
 //namespace place = std::placeholders;
@@ -32,9 +33,14 @@ using std::vector;
 using std::set;
 using std::map;
 using std::unordered_map;
+using std::ios;
 using std::istringstream;
+using std::ifstream;
 using std::istream;
+using std::ostringstream;
+using std::ofstream;
 using std::ostream;
+using std::iostream;
 using std::istream_iterator;
 using std::ostream_iterator;
 using std::istreambuf_iterator;
@@ -42,6 +48,13 @@ using std::ostreambuf_iterator;
 using std::uniform_int_distribution;
 using std::uniform_real_distribution;
 using std::ratio;
+using std::ratio_equal;
+using std::ratio_greater;
+using std::ratio_less;
+using std::ratio_add;
+using std::ratio_subtract;
+using std::ratio_multiply;
+using std::ratio_divide;
 using std::numeric_limits;
 using std::valarray;
 using std::function;
@@ -60,6 +73,7 @@ using std::is_base_of;
 using std::is_function;
 using std::once_flag;
 
+using std::to_string;
 using std::max;
 using std::min;
 using std::advance;
@@ -79,10 +93,15 @@ using std::make_shared;
 using std::make_unique;		// required compiler enable c++ 14 features
 using std::call_once;
 using std::boolalpha;
+using std::stoi;
+using std::stod;
+using std::stol;
+using std::stoul;
 
 using std::cout;
 using std::cin;
 using std::cerr;
+using std::clog;
 
 enum symbol:char{
     en='\n',et='\t',er='\r',sp=' ',dt=','
@@ -147,4 +166,9 @@ int hardlim(double d,double threshold=0.5){
     return d>threshold?1:0;
 }
 
+template <int a,int b> constexpr
+bool equal()
+{
+	return std::ratio_equal_v<ratio<a>, ratio<b>>;
+}
 

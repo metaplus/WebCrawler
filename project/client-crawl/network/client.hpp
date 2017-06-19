@@ -2,82 +2,156 @@
 #include "common/citeSTL.hpp"
 #include "common/citeBoost.hpp"
 #include "common/utility/pool.hpp"
+#include "common/utility/material.hpp"
+#include "network/session.hpp"
+#include <cassert>
+#include <future>
+
+
+
+template<typename T>	//, typename = enable_if_t<is_same<T, net::client>::value>>
+class factory :noncopyable {
+public:
+	factory(pool<thread>& po, const file::path& pa, ptree& tr) :
+		pool{ po }, path{ pa }, tree{ tr }
+	{
+
+	}
+	auto create(size_t id)
+	{
+		auto ptr{ std::make_shared<T>(pool, path, id, tree,*this) };
+		manager.push_back(ptr);
+		return ptr;
+	}
+	void push(shared_ptr<T> ptr)
+	{
+		manager.push_back(ptr);
+	}
+private:
+	pool<thread>& pool;
+	const file::path& path;
+	property::ptree& tree;
+	vector<shared_ptr<T>> manager;
+};
+
 
 namespace net
 {
-	class client;
-
-	struct handler
+	class handler
 	{
-		void read(const error& err,shared_ptr<streambuf> response)
+	public:
+		explicit handler(const file::path& dir, size_t id, ptree& tr) : catalog{ dir }, id{ id }, tree{ tr }
 		{
-			cout << en;
-			istream response_stream{ response.get() };
-			cout << response_stream.rdbuf() << en;
+		}
+		template<typename U, typename = enable_if_t<is_base_of<element, U>::value>>
+		void resolve(const error& err, resolver::iterator iter, shared_ptr<U> ptr)
+		{
+			async_connect(*socket, iter, bind(&handler::connect, this, place::error));
+			elem = move(ptr);
 		}
 
-		void write(const error& err)
-		{
-			auto response = make_shared<streambuf>();
-			async_read_until(*socket, *response, "\r\n",
-				bind(&handler::read, this, place::error, response));
-			bufptr.push_back(response);
-
-		}
+	private:
 		void connect(const error& err)
 		{
-			BOOST_ASSERT_MSG(!err, "connection error");
-			cout << "remote" << et << socket->remote_endpoint() << en
-				<< "local" << et << socket->local_endpoint() << en;
-			auto request = make_shared<streambuf>();
-			ostream request_stream{ request.get() };
-			request_stream << "GET " << directory << " HTTP/1.0" << crlf
+			ostringstream oss;			// potential hazard ? thread_local
+			oss << "GET " << directory << " HTTP/1.1" << crlf
 				<< "Host: " << host << crlf
 				<< "Accept: */*" << crlf
 				<< "Connection: close" << crlf << crlf;
-			async_write(*socket, *request, bind(&handler::write, this, place::error));
-			bufptr.push_back(request);
+			async_write(*socket, asio::buffer(oss.str().data(), oss.str().size()), bind(&handler::write, this, place::error));
 		}
-		void resolve (const error& err, resolver::iterator iter)
+		void write(const error& err)
 		{
-			BOOST_ASSERT_MSG(!err, "DNS error");
-			async_connect(*socket, iter, bind(&handler::connect, this, place::error));
+			async_read_until(*socket, response, "\r\n\r\n",
+				bind(&handler::read, this, place::error));
 		}
+
+		void read(const error& err)
+		{		
+			if (err)
+			{
+				cerr << "zzzzzzzzzzzzzzzzzzz1111111111111111111111" << en;
+				return;
+			}
+			istream response_stream{ &response };
+			string line;
+			size_t length{ 0 };
+			while (getline(response_stream, line, '\r') && !line.empty())
+			{
+			//	cout << line << en;
+				if(line.find("Location: ")!=string::npos)
+				{
+					callback.set_value(line.substr(line.find(':') + 2));
+					return;
+				}
+				if (line.find("Content-Length: ") != string::npos)
+				{
+					cout << line << en;
+					length = lexical_cast<size_t>(line.substr(line.find(':') + 2));
+				}
+				response_stream.ignore();
+			}
+			response_stream >> ws;
+			callback.set_value({});
+			elem->process(response, *socket, length - response.size());
+		}
+	public:
+		shared_ptr<element> elem;
 		unique_ptr<tcp::resolver> dns;
 		unique_ptr<tcp::socket> socket;
-		vector<shared_ptr<streambuf>> bufptr;
+		streambuf response;
 		string host;
 		string directory;
+		size_t id;
+		ptree& tree;
+		const file::path& catalog;
+		boost::promise<string> callback;
 	};
-	class client:public handler
+
+
+
+
+	class client:public enable_shared_from_this<client>
 	{
 	public:
-		explicit client(pool<thread>& p):
-			pool{p},service{pool.get()}
+		explicit client(pool<thread>& p, const file::path& dir, size_t id, ptree& tr, factory<client>& fac) :
+			pool{ p }, catalog{ dir }, id{ id }, tree{ tr }, service{ pool.get() }, factory{ fac }
 		{
-			dns = make_unique<tcp::resolver>(service);
-			socket = make_unique<tcp::socket>(service);
 		}
-		void remote(string url)
+		template<typename U>
+		enable_if_t<std::is_base_of_v<element,U>> crawl(const string& url)
 		{
+			auto task = new handler(catalog, id, tree);
+			task->dns = make_unique<tcp::resolver>(service);
+			task->socket = make_unique<tcp::socket>(service);
 			smatch part;
 			regex pattern{ "http:\/\/([^\/]+)(.*)" };
 			regex_match(url, part, pattern);
-			host = part[1].str();
-			directory = part[2].str();
-			cout << "host" << et << host << en
-				<< "catlog" << et << directory << en;
+			task->host = part[1].str();
+			task->directory = part[2].str();
+
+			task->dns->async_resolve(resolver::query(task->host, "http"),
+				bind(&handler::resolve<U>, task, 
+						place::error, place::iterator,make_shared<U>(id,tree,catalog)));
+			auto value = task->callback.get_future().get();
+			if(!value.empty())
+			{
+				auto task2 = std::make_shared<client>(pool, catalog, id, tree, factory);
+				factory.push(task2);
+				task2->crawl<mp3>(value);
+			}
 		}
-		void run() 
-		{
-			dns->async_resolve(resolver::query(host, "http"),
-				bind(&handler::resolve, this, place::error, place::iterator));
-	//		this_thread::sleep_for(chrono::seconds{ 1 });
-			pool.wait();
-		}
+
+
 	private:
 		pool<thread>& pool;
 		io_service& service;
+		const file::path& catalog;
+		size_t id;
+		ptree& tree;
+		factory<client>& factory;
 	};
 }
+
+
 
