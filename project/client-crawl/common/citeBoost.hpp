@@ -59,6 +59,7 @@ using boost::asio::async_read_until;
 using boost::asio::async_read;
 using boost::asio::async_write;
 using boost::asio::async_connect;
+using boost::asio::read_until;
 using boost::asio::read;
 using boost::asio::write;
 using boost::asio::connect;

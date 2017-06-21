@@ -40,7 +40,7 @@ namespace net
 	class handler
 	{
 	public:
-		explicit handler(const file::path& dir, size_t id, ptree& tr) : catalog{ dir }, id{ id }, tree{ tr }
+		handler(const file::path& dir, size_t id, ptree& tr) : catalog{ dir }, id{ id }, tree{ tr }
 		{
 		}
 		template<typename U, typename = enable_if_t<is_base_of<element, U>::value>>
@@ -48,6 +48,7 @@ namespace net
 		{
 			async_connect(*socket, iter, bind(&handler::connect, this, place::error));
 			elem = move(ptr);
+			iter = iter;
 		}
 
 	private:
@@ -70,30 +71,46 @@ namespace net
 		{		
 			if (err)
 			{
-				cerr << "zzzzzzzzzzzzzzzzzzz1111111111111111111111" << en;
+				cerr << "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz" << en;
+				socket->cancel();
+				socket->get_io_service().reset();
+				async_connect(*socket, iter, bind(&handler::connect, this, place::error));
 				return;
 			}
 			istream response_stream{ &response };
 			string line;
 			size_t length{ 0 };
+			auto chunked{ false };
 			while (getline(response_stream, line, '\r') && !line.empty())
 			{
-			//	cout << line << en;
+				//cout << line << en;
 				if(line.find("Location: ")!=string::npos)
 				{
+					auto str{ line.substr(line.find(':') + 2) };
+					cout << et << "loc" << et << id << et<<str << en;
 					callback.set_value(line.substr(line.find(':') + 2));
 					return;
 				}
 				if (line.find("Content-Length: ") != string::npos)
 				{
-					cout << line << en;
 					length = lexical_cast<size_t>(line.substr(line.find(':') + 2));
+				}
+				if(!chunked&&line.find("Transfer-Encoding: chunked"))
+				{
+					chunked = true;
+				}else if(!line.find(':'))
+				{
+					cout << line << en;
+					cout << lexical_cast<int>(line) << en;
 				}
 				response_stream.ignore();
 			}
+
 			response_stream >> ws;
 			callback.set_value({});
-			elem->process(response, *socket, length - response.size());
+			auto value = max<size_t>(length, response.size()) - response.size();
+			elem->process(response, *socket, value);
+
 		}
 	public:
 		shared_ptr<element> elem;
@@ -106,6 +123,7 @@ namespace net
 		ptree& tree;
 		const file::path& catalog;
 		boost::promise<string> callback;
+		resolver::iterator iter;
 	};
 
 
@@ -114,7 +132,7 @@ namespace net
 	class client:public enable_shared_from_this<client>
 	{
 	public:
-		explicit client(pool<thread>& p, const file::path& dir, size_t id, ptree& tr, factory<client>& fac) :
+		client(pool<thread>& p, const file::path& dir, size_t id, ptree& tr, factory<client>& fac) :
 			pool{ p }, catalog{ dir }, id{ id }, tree{ tr }, service{ pool.get() }, factory{ fac }
 		{
 		}
@@ -129,16 +147,19 @@ namespace net
 			regex_match(url, part, pattern);
 			task->host = part[1].str();
 			task->directory = part[2].str();
-
 			task->dns->async_resolve(resolver::query(task->host, "http"),
-				bind(&handler::resolve<U>, task, 
-						place::error, place::iterator,make_shared<U>(id,tree,catalog)));
+				bind(&handler::resolve<U>, task, place::error, 
+					place::iterator, make_shared<U>(id, tree, catalog)));
 			auto value = task->callback.get_future().get();
 			if(!value.empty())
 			{
+				{
+					tree.add("other", lexical_cast<string>(id));
+					return;
+				}
 				auto task2 = std::make_shared<client>(pool, catalog, id, tree, factory);
 				factory.push(task2);
-				task2->crawl<mp3>(value);
+				task2->crawl<U>(value);
 			}
 		}
 
