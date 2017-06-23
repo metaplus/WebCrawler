@@ -88,13 +88,7 @@ struct html :element
 			// amazingly, subjacent comment method doesn't work... maybe caused of encoding???
 			//	cout << page.substr(pos1 + prev.size(), pos2-pos1) << en;    
 			pos1 += prev.size();
-	//		assert(pos1 < pos2);
-	//		assert(pos2 < page.size());
-			if(pos2>=page.size())
-			{
-				return string{};
-			}
-			return string{ &page.at(pos1), &page.at(pos2) };
+			return pos2 >= page.size() ? string{} : string{ &page.at(pos1), &page.at(pos2) };
 		};
 
 		ptree node;

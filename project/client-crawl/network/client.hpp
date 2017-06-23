@@ -71,7 +71,6 @@ namespace net
 		{		
 			if (err)
 			{
-				cerr << "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz" << en;
 				socket->cancel();
 				socket->get_io_service().reset();
 				async_connect(*socket, iter, bind(&handler::connect, this, place::error));
@@ -157,9 +156,6 @@ namespace net
 					tree.add("other", lexical_cast<string>(id));
 					return;
 				}
-				auto task2 = std::make_shared<client>(pool, catalog, id, tree, factory);
-				factory.push(task2);
-				task2->crawl<U>(value);
 			}
 		}
 

@@ -41,6 +41,7 @@ using boost::smatch;
 using boost::cmatch;
 using boost::promise;
 using boost::optional;
+using boost::packaged_task;
 using boost::lockfree::spsc_queue;
 using boost::lockfree::capacity;
 using boost::asio::ip::address;
@@ -66,7 +67,6 @@ using boost::asio::connect;
 using boost::regex_match;
 using boost::regex_search;
 using boost::lexical_cast;
-
 using boost::asio::transfer_all;
 using boost::asio::transfer_at_least;
 using boost::asio::transfer_exactly;
